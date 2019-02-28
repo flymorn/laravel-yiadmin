@@ -1,7 +1,7 @@
 <p align="center">
 <h1 align="center">Laravel-yiadmin</h1>
 
-<p align="center">⛵<code>laravel-yiadmin</code> which based on laravel-admin <code>1.6.9</code>  is administrative interface builder for laravel which can help you build CRUD backends just with few lines of code.</p>
+<p align="center">⛵<code>laravel-yiadmin</code> which based on laravel-admin <code>1.6.9</code>  is administrative interface builder for laravel which can help you build CRUD backends just with few lines of code!</p>
 
 
 Screenshots
