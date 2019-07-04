@@ -110,6 +110,20 @@ class Form implements Renderable
     protected $saved = [];
 
     /**
+     * deleting callback. - fly added
+     *
+     * @var Closure[]
+     */
+    protected $deleting = [];
+
+    /**
+     * deleted callback. - fly added
+     *
+     * @var Closure[]
+     */
+    protected $deleted = [];
+
+    /**
      * Callbacks after getting editing model.
      *
      * @var Closure[]
@@ -289,29 +303,70 @@ class Form implements Renderable
      *
      * @return mixed
      */
-    public function destroy($id)
+/*    public function destroy($id)
     {
         collect(explode(',', $id))->filter()->each(function ($id) {
             $builder = $this->model()->newQuery();
-
             if ($this->isSoftDeletes) {
                 $builder = $builder->withTrashed();
             }
-
             $model = $builder->with($this->getRelations())->findOrFail($id);
-
             if ($this->isSoftDeletes && $model->trashed()) {
                 $this->deleteFiles($model, true);
                 $model->forceDelete();
-
                 return;
             }
-
             $this->deleteFiles($model);
             $model->delete();
         });
-
         return true;
+    }*/
+
+    /**
+     * Destroy data entity and remove files.  - fly edited
+     *
+     * @param $id
+     *
+     * @return mixed
+     */
+    public function destroy($id)
+    {
+        try {
+            // 删除前回调 - fly added
+            if (($ret = $this->callDeleting($id)) instanceof Response) {
+                return $ret;
+            }
+
+            collect(explode(',', $id))->filter()->each(function ($id) {
+                $builder = $this->model()->newQuery();
+                if ($this->isSoftDeletes) {
+                    $builder = $builder->withTrashed();
+                }
+                $model = $builder->with($this->getRelations())->findOrFail($id);
+                if ($this->isSoftDeletes && $model->trashed()) {
+                    $this->deleteFiles($model, true);
+                    $model->forceDelete();
+                    return;
+                }
+                $this->deleteFiles($model);
+                $model->delete();
+            });
+
+            // 删除后回调 - fly added
+            if (($ret = $this->callDeleted($id)) instanceof Response) {
+                return $ret;
+            }
+            $response = [
+                'status'  => true,
+                'message' => trans('admin.delete_succeeded'),
+            ];
+        } catch (\Exception $exception) {
+            $response = [
+                'status'  => false,
+                'message' => $exception->getMessage() ?: trans('admin.delete_failed'),
+            ];
+        }
+        return response()->json($response);
     }
 
     /**
@@ -516,6 +571,36 @@ class Form implements Renderable
             }
         }
     }
+
+
+    /**
+     * Call deleting callback. - fly added
+     *
+     * @return mixed
+     */
+    protected function callDeleting($id)
+    {
+        foreach ($this->deleting as $func) {
+            if ($func instanceof Closure && ($ret = call_user_func($func, $id)) instanceof Response) {// call_user_func($func, $this) 第2个参数修改为$id
+                return $ret;
+            }
+        }
+    }
+
+    /**
+     * Callback after deleting a Model. - fly added
+     *
+     * @return mixed|null
+     */
+    protected function callDeleted($id)
+    {
+        foreach ($this->deleted as $func) {
+            if ($func instanceof Closure && ($ret = call_user_func($func, $id)) instanceof Response) {// call_user_func($func, $this) 第2个参数修改为$id
+                return $ret;
+            }
+        }
+    }
+
 
     /**
      * Handle update.
@@ -983,6 +1068,32 @@ class Form implements Renderable
     {
         $this->saved[] = $callback;
     }
+
+
+    /**
+     * Set deleting callback. - fly added
+     *
+     * @param Closure $callback
+     *
+     * @return void
+     */
+    public function deleting(Closure $callback)
+    {
+        $this->deleting[] = $callback;
+    }
+
+    /**
+     * Set deleted callback. - fly added
+     *
+     * @param Closure $callback
+     *
+     * @return void
+     */
+    public function deleted(Closure $callback)
+    {
+        $this->deleted[] = $callback;
+    }
+
 
     /**
      * Ignore fields to save.

@@ -35,7 +35,7 @@ trait HasResourceActions
      */
     public function destroy($id)
     {
-        if ($this->form()->destroy($id)) {
+        /*if ($this->form()->destroy($id)) {
             $data = [
                 'status'  => true,
                 'message' => trans('admin.delete_succeeded'),
@@ -47,6 +47,10 @@ trait HasResourceActions
             ];
         }
 
-        return response()->json($data);
+        return response()->json($data);*/
+
+        // fly edited
+        $ret = $this->form()->destroy($id);
+        return $ret;
     }
 }
