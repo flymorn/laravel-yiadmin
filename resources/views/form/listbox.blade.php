@@ -11,7 +11,7 @@
                 <option value="{{$select}}" {{  in_array($select, (array)old($column, $value)) ?'selected':'' }}>{{$option}}</option>
             @endforeach
         </select>
-        <input type="hidden" name="{{$name}}[]" />
+        <!-- <input type="hidden" name="{{$name}}[]" /> 删除最后一个空值-->
 
         @include('admin::form.help-block')
 
